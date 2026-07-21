@@ -2,8 +2,7 @@
   "name": "digifinexxx-django-react",
   "private": true,
   "scripts": {
-    "start": "cd frontend && npm run dev",
-    "build": "cd frontend && npm run build",
-    "install-frontend": "cd frontend && npm install"
+    "build": "cd frontend && npm install --include=dev && npx vite build",
+    "start": "gunicorn belou.wsgi:application"
   }
 }
