@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="54" viewBox="0 0 120 54" role="img" aria-label="VIP badge">
+  <defs>
+    <linearGradient id="gold" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#fff5bf"/>
+      <stop offset="0.35" stop-color="#ffd04e"/>
+      <stop offset="0.7" stop-color="#c88712"/>
+      <stop offset="1" stop-color="#fff0a6"/>
+    </linearGradient>
+    <linearGradient id="red" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#ff4545"/>
+      <stop offset="1" stop-color="#b51220"/>
+    </linearGradient>
+    <filter id="shadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="3" stdDeviation="2" flood-color="#000" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+  <g filter="url(#shadow)">
+    <path d="M20 13h80l9 9-9 9H20l-9-9 9-9z" fill="url(#gold)" stroke="#b87409" stroke-width="2"/>
+    <path d="M25 33h17l-8 18-4-9-10 5z" fill="url(#red)"/>
+    <path d="M78 33h17l5 14-10-5-4 9z" fill="url(#red)"/>
+    <rect x="24" y="9" width="72" height="26" rx="13" fill="url(#gold)" stroke="#f9e287" stroke-width="2"/>
+    <text x="60" y="29" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="24" font-weight="900" fill="#8c5400" stroke="#fff3a8" stroke-width="0.8">VIP</text>
+  </g>
+</svg>

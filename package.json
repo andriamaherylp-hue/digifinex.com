@@ -1,0 +1,9 @@
+{
+  "name": "digifinexxx-django-react",
+  "private": true,
+  "scripts": {
+    "start": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "install-frontend": "cd frontend && npm install"
+  }
+}
