@@ -1437,9 +1437,7 @@ function AdminPage({ back, user }) {
   }
 
   const closeTrade = async (id) => {
-    const form = closeForms[id] || { result: 'win', profit_loss: '', close_price: '' }
-
-    if (!form.profit_loss) return toast.error('Please enter profit/loss')
+    const form = closeForms[id] || { result: 'win', close_price: '' }
 
     try {
       await apiRequest('/api/app/admin/close-trade/', {
@@ -1447,8 +1445,10 @@ function AdminPage({ back, user }) {
         body: JSON.stringify({
           id,
           result: form.result,
-          profit_loss: form.profit_loss,
           close_price: form.close_price || '0',
+          // The admin only chooses the result type on each trading card.
+          // The backend remains responsible for the final P/L calculation.
+          profit_loss: form.result === 'loss' ? '-1' : '1',
         }),
       })
       toast.success(M.orderClosed)
@@ -1625,14 +1625,6 @@ function AdminPage({ back, user }) {
 
       <section className="admin-card wide">
         <h3>Open trade orders</h3>
-        <div className="multi-trade-toolbar">
-          <select>
-            <option>All</option><option>Win</option><option>Loss</option><option>Draw</option>
-          </select>
-          <input placeholder="Email or account name..." />
-          <select><option>Remaining time</option><option>Amount</option></select>
-          <button onClick={() => loadAdmin()}>↻ Refresh</button>
-        </div>
         <div className="trade-account-grid">
         {openTrades.length ? openTrades.map((item, index) => {
           const remaining = getRemainingSeconds(item, adminNow)
