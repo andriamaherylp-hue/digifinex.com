@@ -1056,20 +1056,18 @@ function playAdminBeep() {
   try {
     const audio = new Audio(adminNotificationSound)
 
-    audio.volume = 14
+    audio.volume = 1
     audio.currentTime = 0
 
-    // Limite la durée à 5 secondes
     const stopTimer = setTimeout(() => {
       audio.pause()
       audio.currentTime = 0
     }, 5000)
 
-    audio.play()
-      .catch((error) => {
-        console.warn('Browser blocked automatic sound:', error)
-        clearTimeout(stopTimer)
-      })
+    audio.play().catch((error) => {
+      console.warn('Browser blocked automatic sound:', error)
+      clearTimeout(stopTimer)
+    })
 
   } catch (error) {
     console.warn('Sound error:', error)
@@ -1280,16 +1278,7 @@ function AdminPage({ back, user }) {
   const [adjustForm, setAdjustForm] = useState({ amount: '', note: '' })
   const [closeForms, setCloseForms] = useState({})
   const [adminNow, setAdminNow] = useState(Date.now())
-  const [adminSoundReady, setAdminSoundReady] = useState(true)
   const knownOpenTradesRef = useRef(new Set())
-  const adminSoundReadyRef = useRef(true)
-
-  const enableAdminSound = () => {
-    adminSoundReadyRef.current = true
-    setAdminSoundReady(true)
-    playAdminBeep()
-    toast.success('Gunshot notification sound is active', { autoClose: 1200, position: 'top-center' })
-  }
 
   const loadAdmin = async () => {
     try {
@@ -1338,6 +1327,21 @@ function AdminPage({ back, user }) {
 
   useEffect(() => {
     if (!user?.is_staff) return undefined
+
+    // Prépare le navigateur pour autoriser les notifications sonores.
+    // Aucun bouton manuel n'est nécessaire.
+    const unlockAudio = () => {
+      try {
+        const audio = new Audio(adminNotificationSound)
+        audio.volume = 0
+        audio.play().then(() => {
+          audio.pause()
+          audio.currentTime = 0
+        }).catch(() => {})
+      } catch (_) {}
+    }
+
+    unlockAudio()
 
     loadAdmin()
 
