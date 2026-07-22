@@ -1790,3 +1790,19 @@ svg {
   height: auto;
   object-fit: contain;
 }
+
+.trade-account-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:20px}
+.trade-account-card{background:#fff;border:1px solid #edf0f5;border-radius:18px;padding:22px;box-shadow:0 12px 30px rgba(0,0,0,.04)}
+.trade-account-head{display:flex;gap:14px;align-items:center;border-bottom:1px solid #eef0f5;padding-bottom:18px;margin-bottom:10px}
+.trade-account-head small{display:block;color:#8b95a7}
+.trade-account-head span{display:inline-block;background:#e8fff1;color:#12a66a;padding:4px 10px;border-radius:20px;font-size:12px}
+.avatar{width:54px;height:54px;border-radius:50%;background:#e7f0ff;color:#2670df;display:flex;align-items:center;justify-content:center;font-weight:bold}
+.trade-line,.trade-control{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid #f1f3f7}
+.trade-line b,.trade-control label{color:#475569}
+.trade-control input,.trade-control select,.multi-trade-toolbar input,.multi-trade-toolbar select{border:1px solid #e5e7eb;border-radius:10px;padding:10px;background:#fff}
+.multi-trade-toolbar{display:flex;gap:16px;margin:20px 0}
+.multi-trade-toolbar>*{flex:1}
+.multi-trade-toolbar button{background:#f43f5e;color:white;border-radius:12px}
+.close-trade-btn{width:100%;margin-top:18px;background:#f43f5e;color:#fff;padding:13px;border-radius:10px;font-weight:600}
+.trade-note{margin-top:20px;background:#eef6ff;padding:18px;border-radius:15px;color:#3563a8}
+@media(max-width:900px){.trade-account-grid{grid-template-columns:1fr}.multi-trade-toolbar{flex-direction:column}}

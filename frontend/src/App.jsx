@@ -1619,40 +1619,41 @@ function AdminPage({ back, user }) {
 
       <section className="admin-card wide">
         <h3>Open trade orders</h3>
-        <div className="admin-close-form">
-          <select value={closeForm.result} onChange={(e) => setCloseForm({ ...closeForm, result: e.target.value })}>
-            <option value="win">Win</option>
-            <option value="loss">Loss</option>
-            <option value="draw">Draw</option>
+        <div className="multi-trade-toolbar">
+          <select>
+            <option>All</option><option>Win</option><option>Loss</option><option>Draw</option>
           </select>
-          <input value={closeForm.profit_loss} onChange={(e) => setCloseForm({ ...closeForm, profit_loss: e.target.value })} placeholder="Profit/Loss: 100 or -50" />
-          <input value={closeForm.close_price} onChange={(e) => setCloseForm({ ...closeForm, close_price: e.target.value })} placeholder="Close price" />
+          <input placeholder="Email or account name..." />
+          <select><option>Remaining time</option><option>Amount</option></select>
+          <button onClick={() => loadAdmin()}>↻ Refresh</button>
         </div>
-
-        {openTrades.length ? openTrades.map((item) => {
+        <div className="trade-account-grid">
+        {openTrades.length ? openTrades.map((item, index) => {
           const remaining = getRemainingSeconds(item, adminNow)
-
           return (
-            <div className="admin-request admin-trade-request" key={item.id}>
-              <div>
-                <p>
-                  <b>{item.username}</b> — {item.market_name}{' '}
-                  <span className={item.side === 'buy' ? 'admin-buy' : 'admin-sell'}>
-                    {item.side === 'buy' ? 'Buy' : 'Sell'}
-                  </span>
-                </p>
-                <small>Amount: ${money(item.amount)} | Entry: {item.entry_price}</small>
-                <small>
-                  Duration: {item.duration_seconds}s | Remaining:{' '}
-                  <b className={remaining <= 10 ? 'admin-countdown danger' : 'admin-countdown'}>
-                    {remaining}s
-                  </b>
-                </small>
+            <div className="trade-account-card" key={item.id}>
+              <div className="trade-account-head">
+                <div className="avatar">{index + 1}</div>
+                <div><b>{item.username}</b><small>Account: {item.username}</small><span>● Active</span></div>
               </div>
-              <div><button onClick={() => closeTrade(item.id)}>Close order</button></div>
+              <div className="trade-line"><b>Instrument</b><strong>{item.market_name}</strong></div>
+              <div className="trade-line"><b>Order type</b><strong className="admin-buy">{item.side === 'buy' ? 'Buy' : 'Sell'}</strong></div>
+              <div className="trade-line"><b>Amount</b><strong>${money(item.amount)}</strong></div>
+              <div className="trade-line"><b>Entry price</b><strong>{item.entry_price}</strong></div>
+              <div className="trade-control"><label>Result type</label>
+                <select value={closeForm.result} onChange={(e)=>setCloseForm({...closeForm,result:e.target.value})}>
+                  <option value="win">Win</option><option value="loss">Loss</option><option value="draw">Draw</option>
+                </select>
+              </div>
+              <div className="trade-control"><label>Close price</label><input value={closeForm.close_price} onChange={(e)=>setCloseForm({...closeForm,close_price:e.target.value})} placeholder="Enter close price"/></div>
+              <div className="trade-line"><b>Duration</b><strong>{item.duration_seconds}s</strong></div>
+              <div className="trade-line"><b>Remaining</b><strong className="admin-countdown">{remaining}s</strong></div>
+              <button className="close-trade-btn" onClick={()=>closeTrade(item.id)}>🔒 Close order</button>
             </div>
           )
         }) : <small>No open trade order</small>}
+        </div>
+        <div className="trade-note">Choose the result type and close price for each account manually. All orders are managed individually.</div>
       </section>
 
       <section className="admin-card wide">
