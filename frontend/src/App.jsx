@@ -1055,18 +1055,24 @@ function RecordPage({ title, type, text, back, records }) {
 function playAdminBeep() {
   try {
     const audio = new Audio(adminNotificationSound)
-    audio.volume = 1
+
+    audio.volume = 14
     audio.currentTime = 0
 
-    const playPromise = audio.play()
+    // Limite la durée à 5 secondes
+    const stopTimer = setTimeout(() => {
+      audio.pause()
+      audio.currentTime = 0
+    }, 5000)
 
-    if (playPromise !== undefined) {
-      playPromise.catch((error) => {
-        console.warn('Sound notification blocked:', error)
+    audio.play()
+      .catch((error) => {
+        console.warn('Browser blocked automatic sound:', error)
+        clearTimeout(stopTimer)
       })
-    }
+
   } catch (error) {
-    console.warn('Sound notification error:', error)
+    console.warn('Sound error:', error)
   }
 }
 
@@ -1315,10 +1321,16 @@ function AdminPage({ back, user }) {
         setVipClientId((current) => current || firstClientId)
       }
 
-      if (hasPreviousData && hasNewOpenTrade) {
-        toast.info('New trading order received', { autoClose: 2500, position: 'top-center' })
-        if (adminSoundReadyRef.current) playAdminBeep()
-      }
+    if (hasPreviousData && hasNewOpenTrade) {
+
+    toast.info('New trading order received', {
+        autoClose: 2500,
+        position: 'top-center'
+    })
+
+    playAdminBeep()
+
+}
     } catch (error) {
       toast.error(error.message || M.serverError, { position: 'top-center' })
     }
@@ -1483,17 +1495,9 @@ function AdminPage({ back, user }) {
 
   return (
     <div className="app-page admin-page">
-      <TopBar title="Admin Dashboard" onBack={back} />
+      <TopBar title="Keep Going Leka ✅" onBack={back} />
 
-      <div className="admin-sound-box">
-        <button
-          type="button"
-          className={adminSoundReady ? 'admin-sound-button active' : 'admin-sound-button'}
-          onClick={enableAdminSound}
-        >
-          {adminSoundReady ? 'Gunshot notification active' : 'Enable gunshot notification'}
-        </button>
-      </div>
+      
 
       <section className="admin-grid">
         <div className="admin-card">
