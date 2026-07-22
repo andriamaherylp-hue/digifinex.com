@@ -1272,7 +1272,7 @@ function AdminPage({ back, user }) {
   const [clientForm, setClientForm] = useState({ username: '', password: '123456', full_name: '', initial_deposit: '' })
   const [depositForm, setDepositForm] = useState({ amount: '', network: 'USDT-TRC20', note: '' })
   const [adjustForm, setAdjustForm] = useState({ amount: '', note: '' })
-  const [closeForm, setCloseForm] = useState({ result: 'win', profit_loss: '', close_price: '' })
+  const [closeForms, setCloseForms] = useState({})
   const [adminNow, setAdminNow] = useState(Date.now())
   const [adminSoundReady, setAdminSoundReady] = useState(true)
   const knownOpenTradesRef = useRef(new Set())
@@ -1437,20 +1437,26 @@ function AdminPage({ back, user }) {
   }
 
   const closeTrade = async (id) => {
-    if (!closeForm.profit_loss) return toast.error('Please enter profit/loss')
+    const form = closeForms[id] || { result: 'win', profit_loss: '', close_price: '' }
+
+    if (!form.profit_loss) return toast.error('Please enter profit/loss')
 
     try {
       await apiRequest('/api/app/admin/close-trade/', {
         method: 'POST',
         body: JSON.stringify({
           id,
-          result: closeForm.result,
-          profit_loss: closeForm.profit_loss,
-          close_price: closeForm.close_price || '0',
+          result: form.result,
+          profit_loss: form.profit_loss,
+          close_price: form.close_price || '0',
         }),
       })
       toast.success(M.orderClosed)
-      setCloseForm({ result: 'win', profit_loss: '', close_price: '' })
+      setCloseForms((current) => {
+        const next = {...current}
+        delete next[id]
+        return next
+      })
       loadAdmin()
     } catch (error) {
       toast.error(error.message || M.serverError)
@@ -1641,11 +1647,33 @@ function AdminPage({ back, user }) {
               <div className="trade-line"><b>Amount</b><strong>${money(item.amount)}</strong></div>
               <div className="trade-line"><b>Entry price</b><strong>{item.entry_price}</strong></div>
               <div className="trade-control"><label>Result type</label>
-                <select value={closeForm.result} onChange={(e)=>setCloseForm({...closeForm,result:e.target.value})}>
-                  <option value="win">Win</option><option value="loss">Loss</option><option value="draw">Draw</option>
+                <select
+                  value={(closeForms[item.id] || {result:'win'}).result}
+                  onChange={(e)=>setCloseForms({
+                    ...closeForms,
+                    [item.id]: {
+                      ...(closeForms[item.id] || {profit_loss:'', close_price:''}),
+                      result:e.target.value
+                    }
+                  })}
+                >
+                  <option value="win">Gain</option>
+                  <option value="loss">Loss</option>
                 </select>
               </div>
-              <div className="trade-control"><label>Close price</label><input value={closeForm.close_price} onChange={(e)=>setCloseForm({...closeForm,close_price:e.target.value})} placeholder="Enter close price"/></div>
+              <div className="trade-control"><label>Close price</label>
+                <input
+                  value={(closeForms[item.id] || {}).close_price || ''}
+                  onChange={(e)=>setCloseForms({
+                    ...closeForms,
+                    [item.id]: {
+                      ...(closeForms[item.id] || {result:'win', profit_loss:''}),
+                      close_price:e.target.value
+                    }
+                  })}
+                  placeholder="Enter close price"
+                />
+              </div>
               <div className="trade-line"><b>Duration</b><strong>{item.duration_seconds}s</strong></div>
               <div className="trade-line"><b>Remaining</b><strong className="admin-countdown">{remaining}s</strong></div>
               <button className="close-trade-btn" onClick={()=>closeTrade(item.id)}>🔒 Close order</button>
