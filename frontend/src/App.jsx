@@ -781,7 +781,7 @@ function CustomerAssistantLogo() {
   )
 }
 
-function HomePage({ go }) {
+function HomePage({ go, user }) {
   const markets = useLiveMarkets()
   const [banner, setBanner] = useState(0)
 
@@ -793,8 +793,17 @@ function HomePage({ go }) {
   return (
     <AppFrame page="home" go={go} className="home-page">
       <div className="home-head"><Logo /><Language /></div>
-      <section className="hero-banner image-banner">
+      <section className={`hero-banner image-banner${user?.is_vip ? ' vip-home-banner' : ''}`}>
         <img src={BANNERS[banner]} alt="Digifinex banner" />
+        {user?.is_vip && (
+          <>
+            <div className="vip-banner-copy" aria-label="VIP account">
+              <strong>VIP Account</strong>
+              <small>Exclusive privileges, superior trading experience</small>
+            </div>
+            <img className="vip-banner-badge" src={vipBadgeImage} alt="VIP" />
+          </>
+        )}
       </section>
 
       <section className="quick-grid">
@@ -1883,6 +1892,12 @@ export default function App() {
 
   useEffect(() => { refreshMe().then((user) => { if (user) setPage('home') }) }, [])
 
+  useEffect(() => {
+    const enabled = Boolean(session?.is_vip)
+    document.body.classList.toggle('vip-account-active', enabled)
+    return () => document.body.classList.remove('vip-account-active')
+  }, [session?.is_vip])
+
   const showLoading = () => {
     setOverlay(true)
     window.setTimeout(() => setOverlay(false), 800)
@@ -2016,7 +2031,7 @@ export default function App() {
 
   if (!session && page !== 'login') return <><LoginPage onLogin={login} onRegister={register} overlay={overlay} /><ToastContainer /></>
   if (page === 'login') return <><LoginPage onLogin={login} onRegister={register} overlay={overlay} /><ToastContainer /></>
-  if (page === 'home') return <><HomePage go={go} /><ToastContainer /></>
+  if (page === 'home') return <><HomePage go={go} user={session} /><ToastContainer /></>
   if (page === 'products') return <ProductsPage go={go} />
   if (page === 'my') return <><MyPage go={go} overlay={overlay} user={session} /><ToastContainer /></>
   if (page === 'deposit') return <><DepositPage back={back} overlay={overlay} showLoading={showLoading} user={session} onDeposit={submitDeposit} /><ToastContainer /></>
@@ -2046,5 +2061,5 @@ export default function App() {
   }
   if (page === 'about') return <AboutPage back={back} />
   if (page === 'admin') return <><AdminPage back={back} user={session} /><ToastContainer /></>
-  return <HomePage go={go} />
+  return <HomePage go={go} user={session} />
 }
