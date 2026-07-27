@@ -853,6 +853,18 @@ def app_admin_close_trade(request):
     if result not in [TradeOrder.RESULT_WIN, TradeOrder.RESULT_LOSS, TradeOrder.RESULT_DRAW]:
         return JsonResponse({'error': 'Invalid trade result.'}, status=400)
 
+    if close_price <= 0:
+        return JsonResponse({'error': 'Close price must be greater than 0.'}, status=400)
+
+    if result == TradeOrder.RESULT_WIN and profit_loss <= 0:
+        return JsonResponse({'error': 'A winning trade must have a positive Profit/Loss amount.'}, status=400)
+
+    if result == TradeOrder.RESULT_LOSS and profit_loss >= 0:
+        return JsonResponse({'error': 'A losing trade must have a negative Profit/Loss amount.'}, status=400)
+
+    if result == TradeOrder.RESULT_DRAW and profit_loss != Decimal('0.00'):
+        return JsonResponse({'error': 'A draw trade must have a zero Profit/Loss amount.'}, status=400)
+
     try:
         order = TradeOrder.objects.select_related('user').get(pk=order_id)
     except TradeOrder.DoesNotExist:
@@ -860,6 +872,9 @@ def app_admin_close_trade(request):
 
     if order.status != TradeOrder.STATUS_OPEN:
         return JsonResponse({'error': 'This order is already closed.'}, status=400)
+
+    if result == TradeOrder.RESULT_LOSS and abs(profit_loss) > order.amount:
+        return JsonResponse({'error': 'The loss cannot be greater than the traded amount.'}, status=400)
 
     with transaction.atomic():
         order = TradeOrder.objects.select_for_update().get(pk=order.pk)

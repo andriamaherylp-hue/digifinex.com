@@ -1,6 +1,7 @@
 import adminNotificationSound from './assets/mrfriends-pistol-shot-233473.mp3'
 import vipBadgeImage from './assets/vip-badge.svg'
 import { M } from './messages'
+import TradingAccountCard from './components/TradingAccountCard'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   FiArrowLeft,
@@ -907,7 +908,7 @@ function MyPage({ go, overlay, user }) {
       </section>
 
       <section className="account-list">
-        {user?.is_staff && <button className="account-row admin-entry" onClick={() => go('admin')}><span className="round-icon violet"><FaUserTie /></span><b>Admin Dashboard</b><FiChevronRight /></button>}
+        {user?.is_staff && <button className="account-row admin-entry" onClick={() => go('admin')}><span className="round-icon violet"><FaUserTie /></span><b>Admin✅</b><FiChevronRight /></button>}
         {accountRows.map((row) => {
           const Icon = row.icon
           return (
@@ -1277,6 +1278,7 @@ function AdminPage({ back, user }) {
   const [depositForm, setDepositForm] = useState({ amount: '', network: 'USDT-TRC20', note: '' })
   const [adjustForm, setAdjustForm] = useState({ amount: '', note: '' })
   const [closeForms, setCloseForms] = useState({})
+  const [closingTrades, setClosingTrades] = useState({})
   const [adminNow, setAdminNow] = useState(Date.now())
   const knownOpenTradesRef = useRef(new Set())
 
@@ -1452,30 +1454,73 @@ function AdminPage({ back, user }) {
     }
   }
 
+  const updateCloseForm = (id, field, value) => {
+    setCloseForms((current) => {
+      const previous = current[id] || { result: 'win', profit_loss: '', close_price: '' }
+      const next = { ...previous, [field]: value }
+
+      // Keep the P/L sign coherent when the administrator switches Win/Loss.
+      if (field === 'result' && previous.profit_loss !== '') {
+        const amount = Number(previous.profit_loss)
+        if (Number.isFinite(amount) && amount !== 0) {
+          next.profit_loss = value === 'loss' ? String(-Math.abs(amount)) : String(Math.abs(amount))
+        }
+      }
+
+      return { ...current, [id]: next }
+    })
+  }
+
   const closeTrade = async (id) => {
-    const form = closeForms[id] || { result: 'win', close_price: '' }
+    const order = openTrades.find((item) => String(item.id) === String(id))
+    const form = closeForms[id] || { result: 'win', profit_loss: '', close_price: '' }
+    const result = form.result || 'win'
+    const rawProfitLoss = Number(form.profit_loss)
+    const closePrice = Number(form.close_price)
+
+    if (!Number.isFinite(rawProfitLoss) || rawProfitLoss === 0) {
+      toast.error('Enter a valid Profit/Loss amount, for example 100 or -50.')
+      return
+    }
+
+    if (!Number.isFinite(closePrice) || closePrice <= 0) {
+      toast.error('Enter a valid close price greater than 0.')
+      return
+    }
+
+    const profitLoss = result === 'loss' ? -Math.abs(rawProfitLoss) : Math.abs(rawProfitLoss)
+    if (result === 'loss' && order && Math.abs(profitLoss) > Number(order.amount || 0)) {
+      toast.error('The loss cannot be greater than the traded amount.')
+      return
+    }
+
+    setClosingTrades((current) => ({ ...current, [id]: true }))
 
     try {
       await apiRequest('/api/app/admin/close-trade/', {
         method: 'POST',
         body: JSON.stringify({
           id,
-          result: form.result,
-          close_price: form.close_price || '0',
-          // The admin only chooses the result type on each trading card.
-          // The backend remains responsible for the final P/L calculation.
-          profit_loss: form.result === 'loss' ? '-1' : '1',
+          result,
+          profit_loss: profitLoss.toFixed(2),
+          close_price: String(form.close_price),
         }),
       })
       toast.success(M.orderClosed)
       setCloseForms((current) => {
-        const next = {...current}
+        const next = { ...current }
         delete next[id]
         return next
       })
-      loadAdmin()
+      await loadAdmin()
     } catch (error) {
       toast.error(error.message || M.serverError)
+    } finally {
+      setClosingTrades((current) => {
+        const next = { ...current }
+        delete next[id]
+        return next
+      })
     }
   }
 
@@ -1631,57 +1676,26 @@ function AdminPage({ back, user }) {
         </div>
       </section>
 
-      <section className="admin-card wide">
+      <section className="admin-card wide open-trades-panel">
         <h3>Open trade orders</h3>
         <div className="trade-account-grid">
-        {openTrades.length ? openTrades.map((item, index) => {
-          const remaining = getRemainingSeconds(item, adminNow)
-          return (
-            <div className="trade-account-card" key={item.id}>
-              <div className="trade-account-head">
-                <div className="avatar">{index + 1}</div>
-                <div><b>{item.username}</b><small>Account: {item.username}</small><span>● Active</span></div>
-              </div>
-              <div className="trade-line"><b>Instrument</b><strong>{item.market_name}</strong></div>
-              <div className="trade-line"><b>Order type</b><strong className="admin-buy">{item.side === 'buy' ? 'Buy' : 'Sell'}</strong></div>
-              <div className="trade-line"><b>Amount</b><strong>${money(item.amount)}</strong></div>
-              <div className="trade-line"><b>Entry price</b><strong>{item.entry_price}</strong></div>
-              <div className="trade-control"><label>Result type</label>
-                <select
-                  value={(closeForms[item.id] || {result:'win'}).result}
-                  onChange={(e)=>setCloseForms({
-                    ...closeForms,
-                    [item.id]: {
-                      ...(closeForms[item.id] || {profit_loss:'', close_price:''}),
-                      result:e.target.value
-                    }
-                  })}
-                >
-                  <option value="win">Gain</option>
-                  <option value="loss">Loss</option>
-                </select>
-              </div>
-              <div className="trade-control"><label>Close price</label>
-                <input
-                  value={(closeForms[item.id] || {}).close_price || ''}
-                  onChange={(e)=>setCloseForms({
-                    ...closeForms,
-                    [item.id]: {
-                      ...(closeForms[item.id] || {result:'win', profit_loss:''}),
-                      close_price:e.target.value
-                    }
-                  })}
-                  placeholder="Enter close price"
-                />
-              </div>
-              <div className="trade-line"><b>Duration</b><strong>{item.duration_seconds}s</strong></div>
-              <div className="trade-line"><b>Remaining</b><strong className="admin-countdown">{remaining}s</strong></div>
-              <button className="close-trade-btn" onClick={()=>closeTrade(item.id)}>🔒 Close order</button>
-            </div>
-          )
-        }) : <small>No open trade order</small>}
+          {openTrades.length ? openTrades.map((item, index) => (
+            <TradingAccountCard
+              key={item.id}
+              order={item}
+              index={index}
+              remainingSeconds={getRemainingSeconds(item, adminNow)}
+              form={closeForms[item.id] || { result: 'win', profit_loss: '', close_price: '' }}
+              onFieldChange={updateCloseForm}
+              onClose={closeTrade}
+              isClosing={Boolean(closingTrades[item.id])}
+              formatMoney={money}
+            />
+          )) : <small className="no-open-trade">No open trade order</small>}
         </div>
-        <div className="trade-note">Choose the result type and close price for each account manually. All orders are managed individually.</div>
+        <div className="trade-note">
+          Each card is independent: choose Win or Loss, enter that account's Profit/Loss and close price, then close only that order.
+        </div>
       </section>
 
       <section className="admin-card wide">
