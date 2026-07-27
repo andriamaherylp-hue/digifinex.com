@@ -36,8 +36,8 @@ import { MdOutlineAccountBalanceWallet, MdOutlineVerifiedUser } from 'react-icon
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
-const TELEGRAM_URL = 'https://t.me/Manage_digifinex'
-const TELEGRAM_LABEL = '@Manage_digifinex'
+const TELEGRAM_URL = 'https://t.me/Custom_erService'
+const TELEGRAM_LABEL = '@Custom_erService'
 
 const IMAGE_BASE = 'https://dg.houtai.xyz/uploads/20250823'
 const DIGIFINEX_LOGO = `${IMAGE_BASE}/780d452e8991897bbc5d68aaea949c98.png`
