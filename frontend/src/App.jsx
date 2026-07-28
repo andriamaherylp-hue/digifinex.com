@@ -109,6 +109,31 @@ function formatAppDateTime(value) {
   return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}:${parts.second}`
 }
 
+// Used only in Admin > Closed trade orders.
+// All other dates and times continue to use America/New_York.
+const ADMIN_HISTORY_TIME_ZONE = 'Indian/Antananarivo'
+
+function formatAdminHistoryDateTime(value) {
+  const date = new Date(value)
+  if (!value || Number.isNaN(date.getTime())) return ''
+
+  const parts = new Intl.DateTimeFormat(undefined, {
+    timeZone: ADMIN_HISTORY_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).formatToParts(date).reduce((acc, part) => {
+    acc[part.type] = part.value
+    return acc
+  }, {})
+
+  return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}:${parts.second}`
+}
+
 function formatAppTime(value) {
   const parts = formatNewYorkParts(value)
   if (!parts) return '--:--:--'
@@ -917,7 +942,7 @@ function MyPage({ go, overlay, user }) {
       </section>
 
       <section className="account-list">
-        {user?.is_staff && <button className="account-row admin-entry" onClick={() => go('admin')}><span className="round-icon violet"><FaUserTie /></span><b>Admin✅</b><FiChevronRight /></button>}
+        {user?.is_staff && <button className="account-row admin-entry" onClick={() => go('admin')}><span className="round-icon violet"><FaUserTie /></span><b>Admin ✅</b><FiChevronRight /></button>}
         {accountRows.map((row) => {
           const Icon = row.icon
           return (
@@ -1713,7 +1738,7 @@ function AdminPage({ back, user }) {
           <div className="admin-request trade-admin-row" key={item.id}>
             <p><b>{item.username}</b> {item.market_name} {item.side} — {item.result}</p>
             <small>
-              Profit/Loss: ${money(item.profit_loss)} | Close price: {item.close_price || '-'} | Date/Time (America/New_York): {formatAppDateTime(item.closed_at) || '-'}
+              Profit/Loss: ${money(item.profit_loss)} | Close price: {item.close_price || '-'} | Date/Time Madagascar: {formatAdminHistoryDateTime(item.closed_at) || '-'}
             </small>
           </div>
         )) : <small>No closed trade order</small>}
