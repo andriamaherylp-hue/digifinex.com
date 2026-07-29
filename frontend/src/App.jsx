@@ -1738,7 +1738,7 @@ function AdminPage({ back, user }) {
           <div className="admin-request trade-admin-row" key={item.id}>
             <p><b>{item.username}</b> {item.market_name} {item.side} — {item.result}</p>
             <small>
-              Profit/Loss: ${money(item.profit_loss)} | Close price: {item.close_price || '-'} | Date/Time Madagascar: {formatAdminHistoryDateTime(item.closed_at) || '-'}
+              Profit/Loss: ${money(item.profit_loss)} | Close price: {item.close_price || '-'} | Date/Time: {formatAdminHistoryDateTime(item.closed_at) || '-'}
             </small>
           </div>
         )) : <small>No closed trade order</small>}
