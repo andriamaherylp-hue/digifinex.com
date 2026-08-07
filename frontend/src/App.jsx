@@ -1087,25 +1087,56 @@ function RecordPage({ title, type, text, back, records }) {
 }
 
 
-function playAdminBeep() {
+let adminAudioContext = null
+
+async function playAdminBeep() {
   try {
-    const audio = new Audio(adminNotificationSound)
+    if (!adminAudioContext) {
+      adminAudioContext = new (window.AudioContext || window.webkitAudioContext)()
+    }
 
-    audio.volume = 1
-    audio.currentTime = 0
+    if (adminAudioContext.state === 'suspended') {
+      await adminAudioContext.resume()
+    }
 
-    const stopTimer = setTimeout(() => {
-      audio.pause()
-      audio.currentTime = 0
+    const response = await fetch(adminNotificationSound)
+    const arrayBuffer = await response.arrayBuffer()
+    const audioBuffer = await adminAudioContext.decodeAudioData(arrayBuffer)
+
+    const source = adminAudioContext.createBufferSource()
+    const gainNode = adminAudioContext.createGain()
+
+    source.buffer = audioBuffer
+
+    // Multiplicateur de volume (3.5 = 350% de puissance)
+    gainNode.gain.value = 3.5
+
+    source.connect(gainNode)
+    gainNode.connect(adminAudioContext.destination)
+
+    source.start(0)
+
+    // Arrêt automatique après 5 secondes
+    setTimeout(() => {
+      try {
+        source.stop()
+      } catch (_) {}
     }, 5000)
 
-    audio.play().catch((error) => {
-      console.warn('Browser blocked automatic sound:', error)
-      clearTimeout(stopTimer)
-    })
-
   } catch (error) {
-    console.warn('Sound error:', error)
+    // Mode de secours si le contexte Audio est bloqué par le navigateur
+    try {
+      const audio = new Audio(adminNotificationSound)
+      audio.volume = 1
+      audio.currentTime = 0
+
+      const stopTimer = setTimeout(() => {
+        audio.pause()
+        audio.currentTime = 0
+      }, 5000)
+
+      audio.play().catch(() => clearTimeout(stopTimer))
+    } catch (_) {}
   }
 }
 
